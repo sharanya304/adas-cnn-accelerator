@@ -78,3 +78,27 @@ and writes a human-readable `fixed_point_weights.txt`.
 - - **Label columns used:** frame index, class (col 3), bbox left/top/right/bottom (cols 7–10) — standard KITTI tracking format
 - **Classes:** Car/Van/Truck → `Car`, Cyclist → `Cyclist`, Pedestrian/Person_sitting → `Pedestrian` (3-class subset of the full 8 KITTI classes)
 - **Image preprocessing:** resized to 640×192, normalized to [0, 1], BGR→RGB
+
+- ## Expected Output
+
+- `train_mcunetv2.py` → trained weights at `<output_dir>/mcunetv2_<epochs>epochs.pth`; per-epoch focal + WH loss printed to console; bounding-box preview images at `<output_dir>/preview_detections/preview_N_<frame>_bbox.png`
+- `extract_patch_canvas.py` → per-tile and full-canvas feature tensors (`.npy` + `.txt`) in `./canvas_dump_<seq>_<frame>/`
+- `profile_performance.py` → printed latency (ms), throughput (samples/s), peak memory (MB), stitched canvas shape
+- `fixed_point.py` → `fixed_point_weights.txt` with Q8.8 quantized weights per stage
+- Sample outputs included in `sample_outputs/` in this repo
+
+## Important Parameters
+
+| Parameter | Value | Notes |
+|---|---|---|
+| Tile size / overlap | 128×128 / 16px | CLI-configurable; script warns if overlap is smaller than the estimated receptive field |
+| Patch backbone downsample | 8× | `patch_stage`: stem conv + 3 inverted-residual blocks |
+| Total network downsample | 32× | `patch_stage` (8×) × `layer_stage` (4×) — sets detection grid size |
+| Input resolution | 640×192 | Fixed resize target |
+| Epochs / LR | 40 / 5e-4 | AdamW, weight_decay=1e-4 |
+| Confidence threshold | 0.5 (default) | CLI `--thresh` |
+| Loss function | CenterNet focal loss (α=2, β=4) + WH L1 loss | WH loss weighted 0.1× |
+| Heatmap Gaussian radius | Fixed, radius=2 | Same radius applied to every object regardless of class or box size |
+| Min regressed box size | 4 px | Guards against degenerate near-zero predictions early in training |
+| Train/test split | 70% / 30%, seed=42 | |
+| Quantization | Q8.8 fixed-point | 16-bit signed, 8 fractional bits |
