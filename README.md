@@ -73,3 +73,8 @@ and writes a human-readable `fixed_point_weights.txt`.
 ## Input Format
 
 - **Dataset:** KITTI tracking dataset, expected layout:
+- <dataset_dir>/image_02/<sequence>/<frame>.png
+- <dataset_dir>/label_02/<sequence>.txt
+- - **Label columns used:** frame index, class (col 3), bbox left/top/right/bottom (cols 7–10) — standard KITTI tracking format
+- **Classes:** Car/Van/Truck → `Car`, Cyclist → `Cyclist`, Pedestrian/Person_sitting → `Pedestrian` (3-class subset of the full 8 KITTI classes)
+- **Image preprocessing:** resized to 640×192, normalized to [0, 1], BGR→RGB
